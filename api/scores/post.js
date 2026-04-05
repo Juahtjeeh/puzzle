@@ -55,7 +55,7 @@ export default async function handler(req, res) {
         'apikey': process.env.SUPABASE_KEY,
         'Authorization': `Bearer ${process.env.SUPABASE_KEY}`
       },
-      body: JSON.stringify({ client_ip: clientIp })
+      body: JSON.stringify({ client_ip: clientIp, client_level: Number(level) })
     }
   );
 
