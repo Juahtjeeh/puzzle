@@ -11,8 +11,12 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Nickname, level en time_seconds zijn verplicht' });
   }
 
-  if (typeof nickname !== 'string' || nickname.length > 20) {
-    return res.status(400).json({ error: 'Ongeldige nickname' });
+  if (typeof nickname !== 'string' || nickname.length < 1 || nickname.length > 20) {
+    return res.status(400).json({ error: 'Nickname moet tussen 1 en 20 tekens zijn' });
+  }
+
+  if (!/^[a-zA-Z0-9]+$/.test(nickname)) {
+    return res.status(400).json({ error: 'Nickname mag alleen letters en cijfers bevatten' });
   }
 
   if (![8, 16, 32, 64].includes(Number(level))) {
