@@ -9,19 +9,26 @@
     body { font-family: sans-serif; background: #f5f5f3; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 2rem 1rem; color: #1a1a1a; }
     h1 { font-size: 22px; font-weight: 500; margin-bottom: 1.5rem; }
 
-    #start-screen { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-    #start-screen p { font-size: 14px; color: #888; margin-bottom: 4px; }
+    .screen { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 520px; }
+    .screen.active { display: flex; }
+
+    #nickname-screen { gap: 12px; }
+    #nickname-screen p { font-size: 14px; color: #888; }
+    #nickname-input { padding: 10px 14px; border: 0.5px solid #ccc; border-radius: 8px; font-size: 15px; width: 280px; background: #fff; color: #1a1a1a; }
+    #nickname-input:focus { outline: none; border-color: #888; }
+
+    #start-screen { gap: 12px; }
+    #start-screen p { font-size: 14px; color: #888; }
     .level-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 280px; }
     .level-btn { padding: 16px; border: 0.5px solid #ccc; border-radius: 8px; background: #fff; cursor: pointer; font-size: 15px; font-weight: 500; text-align: center; transition: background 0.1s; }
     .level-btn:hover { background: #efefed; }
     .level-btn span { display: block; font-size: 12px; font-weight: 400; color: #888; margin-top: 2px; }
 
-    #game-screen { display: none; flex-direction: column; align-items: center; width: 100%; }
-    .stats { display: flex; gap: 12px; margin-bottom: 1rem; width: 100%; max-width: 520px; }
+    .stats { display: flex; gap: 12px; margin-bottom: 1rem; width: 100%; }
     .stat { flex: 1; background: #fff; border-radius: 8px; border: 0.5px solid #ddd; padding: 10px; text-align: center; }
     .stat-label { font-size: 12px; color: #888; }
     .stat-value { font-size: 20px; font-weight: 500; }
-    .board { display: grid; gap: 8px; width: 100%; max-width: 520px; }
+    .board { display: grid; gap: 8px; width: 100%; }
     .card { aspect-ratio: 1; border-radius: 8px; border: 0.5px solid #ccc; background: #e8e8e5; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.15s; user-select: none; }
     .card:hover { transform: scale(1.05); }
     .card.flipped, .card.matched { background: #fff; }
@@ -32,15 +39,42 @@
     .card.flipped .back, .card.matched .back { display: none; }
     .back { color: #aaa; }
     .win-msg { margin-top: 1rem; color: #1D9E75; font-weight: 500; font-size: 15px; min-height: 22px; text-align: center; }
-    .btn-row { display: flex; gap: 10px; margin-top: 1rem; }
+    .btn-row { display: flex; gap: 10px; margin-top: 1rem; flex-wrap: wrap; justify-content: center; }
+
+    #leaderboard-screen { gap: 16px; }
+    .lb-tabs { display: flex; gap: 8px; }
+    .lb-tab { padding: 6px 16px; border: 0.5px solid #ccc; border-radius: 8px; background: #fff; cursor: pointer; font-size: 13px; }
+    .lb-tab.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+    .lb-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .lb-table th { text-align: left; padding: 8px 10px; color: #888; font-weight: 400; border-bottom: 0.5px solid #ddd; font-size: 12px; }
+    .lb-table td { padding: 10px 10px; border-bottom: 0.5px solid #f0f0ee; }
+    .lb-table tr:last-child td { border-bottom: none; }
+    .rank { font-weight: 500; color: #888; }
+    .rank.gold { color: #BA7517; }
+    .rank.silver { color: #636363; }
+    .rank.bronze { color: #854F0B; }
+    .lb-empty { color: #aaa; font-size: 14px; text-align: center; padding: 2rem 0; }
+    .lb-loading { color: #aaa; font-size: 14px; text-align: center; padding: 2rem 0; }
+
     button.small { padding: 8px 20px; border: 0.5px solid #ccc; border-radius: 8px; background: transparent; color: #1a1a1a; cursor: pointer; font-size: 14px; }
     button.small:hover { background: #efefed; }
+    button.primary { padding: 10px 28px; border: 0.5px solid #1a1a1a; border-radius: 8px; background: #1a1a1a; color: #fff; cursor: pointer; font-size: 14px; }
+    button.primary:hover { background: #333; }
+    .nickname-tag { font-size: 13px; color: #888; margin-bottom: 0.5rem; }
+    .nickname-tag strong { color: #1a1a1a; }
   </style>
 </head>
 <body>
   <h1>Memory</h1>
 
-  <div id="start-screen">
+  <div id="nickname-screen" class="screen active">
+    <p>Voer je nickname in om te beginnen</p>
+    <input id="nickname-input" type="text" maxlength="20" placeholder="Jouw nickname" />
+    <button class="primary" onclick="submitNickname()">Doorgaan</button>
+  </div>
+
+  <div id="start-screen" class="screen">
+    <div class="nickname-tag">Speler: <strong id="display-name"></strong></div>
     <p>Kies een moeilijkheidsgraad</p>
     <div class="level-grid">
       <button class="level-btn" onclick="startGame(8)">8 kaarten<span>Makkelijk</span></button>
@@ -48,9 +82,10 @@
       <button class="level-btn" onclick="startGame(32)">32 kaarten<span>Moeilijk</span></button>
       <button class="level-btn" onclick="startGame(64)">64 kaarten<span>Extreem</span></button>
     </div>
+    <button class="small" style="margin-top:8px;" onclick="showLeaderboard(8)">Leaderboard</button>
   </div>
 
-  <div id="game-screen">
+  <div id="game-screen" class="screen">
     <div class="stats">
       <div class="stat"><div class="stat-label">Pogingen</div><div class="stat-value" id="moves">0</div></div>
       <div class="stat"><div class="stat-label">Gevonden</div><div class="stat-value" id="found">0</div></div>
@@ -60,28 +95,63 @@
     <div class="win-msg" id="win-msg"></div>
     <div class="btn-row">
       <button class="small" onclick="restartLevel()">Opnieuw</button>
-      <button class="small" onclick="goHome()">Menu</button>
+      <button class="small" onclick="showScreen('start-screen')">Menu</button>
+      <button class="small" onclick="showLeaderboard(currentPairs * 2)">Leaderboard</button>
+    </div>
+  </div>
+
+  <div id="leaderboard-screen" class="screen">
+    <div class="lb-tabs">
+      <button class="lb-tab" onclick="showLeaderboard(8)" id="tab-8">8 kaarten</button>
+      <button class="lb-tab" onclick="showLeaderboard(16)" id="tab-16">16 kaarten</button>
+      <button class="lb-tab" onclick="showLeaderboard(32)" id="tab-32">32 kaarten</button>
+      <button class="lb-tab" onclick="showLeaderboard(64)" id="tab-64">64 kaarten</button>
+    </div>
+    <div id="lb-content" style="width:100%;"></div>
+    <div class="btn-row">
+      <button class="small" onclick="showScreen('start-screen')">Terug</button>
     </div>
   </div>
 
   <script>
+    const SUPABASE_URL = 'https://phjbzagpxwnrgbjbexmn.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBoamJ6YWdweHducmdiamJleG1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MDg3NjgsImV4cCI6MjA5MDk4NDc2OH0.eAzq7IkVsn7QBcHcRzy9J1bWspNNLB4r5KsTgPiKsow';
+
     const allEmojis = [
       '🍕','🎸','🌵','🐬','🦋','🎯','🍄','🚀',
       '🦊','🌈','🎃','🍦','🏔️','🎹','🦁','🐙',
       '🌸','🎲','🍉','🦄','🔥','🎨','🐘','🌙',
-      '🍋','🎭','🦅','🐠','🌺','🎪','🦋','🍇',
-      '🏄','🎡','🦩','🐳','🌴','🎠','🦚','🍓',
-      '🏕️','🎢','🦜','🐋','🌻','🎯','🦝','🍑',
-      '🧩','🎸','🦒','🐊','🌾','🎺','🦘','🍒',
-      '🧸','🎻','🦓','🐆','🌿','🎷','🦙','🍈',
+      '🍋','🎭','🦅','🐠','🌺','🎪','🍇','🏄',
+      '🎡','🦩','🐳','🌴','🎠','🦚','🍓','🏕️',
+      '🎢','🦜','🐋','🌻','🦝','🍑','🧩','🦒',
+      '🐊','🌾','🎺','🦘','🍒','🧸','🎻','🦓',
+      '🐆','🌿','🎷','🦙','🍈','🌊','🎬','🦔',
     ];
 
-    let currentPairs = 0, flipped = [], matched = 0, moves = 0, lock = false, timer = 0, interval = null, started = false;
+    let nickname = '';
+    let currentPairs = 0;
+    let flipped = [], matched = 0, moves = 0, lock = false, timer = 0, interval = null, started = false;
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function submitNickname() {
+      const val = document.getElementById('nickname-input').value.trim();
+      if (!val) { document.getElementById('nickname-input').focus(); return; }
+      nickname = val;
+      document.getElementById('display-name').textContent = nickname;
+      showScreen('start-screen');
+    }
+
+    document.getElementById('nickname-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') submitNickname();
+    });
 
     function startGame(cards) {
       currentPairs = cards / 2;
-      document.getElementById('start-screen').style.display = 'none';
-      document.getElementById('game-screen').style.display = 'flex';
+      showScreen('game-screen');
       initGame();
     }
 
@@ -116,12 +186,6 @@
 
     function restartLevel() { initGame(); }
 
-    function goHome() {
-      clearInterval(interval);
-      document.getElementById('game-screen').style.display = 'none';
-      document.getElementById('start-screen').style.display = 'flex';
-    }
-
     function startTimer() {
       interval = setInterval(() => {
         timer++;
@@ -146,6 +210,7 @@
           if (matched === currentPairs) {
             clearInterval(interval);
             document.getElementById('win-msg').textContent = `Gewonnen in ${moves} pogingen en ${timer}s!`;
+            saveScore(currentPairs * 2, timer);
           }
         } else {
           setTimeout(() => {
@@ -153,6 +218,70 @@
             flipped = []; lock = false;
           }, 900);
         }
+      }
+    }
+
+    async function saveScore(level, time_seconds) {
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/highscores`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ nickname, level, time_seconds })
+        });
+      } catch(e) {
+        console.error('Score opslaan mislukt:', e);
+      }
+    }
+
+    async function showLeaderboard(level) {
+      showScreen('leaderboard-screen');
+      document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+      const tab = document.getElementById('tab-' + level);
+      if (tab) tab.classList.add('active');
+
+      const content = document.getElementById('lb-content');
+      content.innerHTML = '<div class="lb-loading">Laden...</div>';
+
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/highscores?level=eq.${level}&order=time_seconds.asc&limit=10`,
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+        );
+        const scores = await res.json();
+
+        if (!scores.length) {
+          content.innerHTML = '<div class="lb-empty">Nog geen scores voor dit niveau.</div>';
+          return;
+        }
+
+        const rankLabel = (i) => {
+          if (i === 0) return '<span class="rank gold">1</span>';
+          if (i === 1) return '<span class="rank silver">2</span>';
+          if (i === 2) return '<span class="rank bronze">3</span>';
+          return `<span class="rank">${i + 1}</span>`;
+        };
+
+        content.innerHTML = `
+          <table class="lb-table">
+            <thead><tr><th>#</th><th>Nickname</th><th>Tijd</th></tr></thead>
+            <tbody>
+              ${scores.map((s, i) => `
+                <tr>
+                  <td>${rankLabel(i)}</td>
+                  <td>${s.nickname}</td>
+                  <td>${s.time_seconds}s</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch(e) {
+        content.innerHTML = '<div class="lb-empty">Leaderboard kon niet worden geladen.</div>';
       }
     }
   </script>
