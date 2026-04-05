@@ -42,7 +42,7 @@
     .btn-row { display: flex; gap: 10px; margin-top: 1rem; flex-wrap: wrap; justify-content: center; }
 
     #leaderboard-screen { gap: 16px; }
-    .lb-tabs { display: flex; gap: 8px; }
+    .lb-tabs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
     .lb-tab { padding: 6px 16px; border: 0.5px solid #ccc; border-radius: 8px; background: #fff; cursor: pointer; font-size: 13px; }
     .lb-tab.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
     .lb-table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -114,8 +114,7 @@
   </div>
 
   <script>
-    const SUPABASE_URL = 'https://phjbzagpxwnrgbjbexmn.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBoamJ6YWdweHducmdiamJleG1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MDg3NjgsImV4cCI6MjA5MDk4NDc2OH0.eAzq7IkVsn7QBcHcRzy9J1bWspNNLB4r5KsTgPiKsow';
+    const API_BASE = '/api/scores';
 
     const allEmojis = [
       '🍕','🎸','🌵','🐬','🦋','🎯','🍄','🚀',
@@ -223,14 +222,9 @@
 
     async function saveScore(level, time_seconds) {
       try {
-        await fetch(`${SUPABASE_URL}/rest/v1/highscores`, {
+        await fetch(`${API_BASE}/post`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Prefer': 'return=minimal'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ nickname, level, time_seconds })
         });
       } catch(e) {
@@ -248,10 +242,7 @@
       content.innerHTML = '<div class="lb-loading">Laden...</div>';
 
       try {
-        const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/highscores?level=eq.${level}&order=time_seconds.asc&limit=10`,
-          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
-        );
+        const res = await fetch(`${API_BASE}/get?level=${level}`);
         const scores = await res.json();
 
         if (!scores.length) {
