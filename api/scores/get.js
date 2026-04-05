@@ -1,6 +1,6 @@
 const ALLOWED_ORIGINS = [
   'https://juahtjeeh.github.io',
-  'https://puzzle.vercel.app',
+  'https://puzzle-delta-three.vercel.app',
 ];
 
 function setCors(req, res) {
