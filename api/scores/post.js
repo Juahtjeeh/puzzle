@@ -3,25 +3,24 @@ const ALLOWED_ORIGINS = [
   'https://puzzle-delta-three.vercel.app',
 ];
 
-function setCors(req, res) {
+export default async function handler(req, res) {
   const origin = req.headers.origin;
-  if (ALLOWED_ORIGINS.includes(origin)) {
+  const originAllowed = ALLOWED_ORIGINS.includes(origin);
+
+  if (originAllowed) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Vary', 'Origin');
-}
 
-export default async function handler(req, res) {
-  setCors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const origin = req.headers.origin;
-  if (origin && !ALLOWED_ORIGINS.includes(origin)) {
+  if (origin && !originAllowed) {
     return res.status(403).json({ error: 'Niet toegestaan' });
   }
+
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { nickname, level, time_seconds } = req.body;
 
@@ -43,6 +42,26 @@ export default async function handler(req, res) {
 
   if (typeof time_seconds !== 'number' || time_seconds < 1 || time_seconds > 86400) {
     return res.status(400).json({ error: 'Ongeldige tijd' });
+  }
+
+  const clientIp = req.headers['x-forwarded-for']?.split(',')[0].trim() || 'unknown';
+
+  const rateLimitRes = await fetch(
+    `${process.env.SUPABASE_URL}/rest/v1/rpc/check_rate_limit`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': process.env.SUPABASE_KEY,
+        'Authorization': `Bearer ${process.env.SUPABASE_KEY}`
+      },
+      body: JSON.stringify({ client_ip: clientIp })
+    }
+  );
+
+  const allowed = await rateLimitRes.json();
+  if (!allowed) {
+    return res.status(429).json({ error: 'Te veel scores ingediend, probeer het later opnieuw' });
   }
 
   const response = await fetch(
