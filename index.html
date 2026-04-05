@@ -16,6 +16,8 @@
     #nickname-screen p { font-size: 14px; color: #888; }
     #nickname-input { padding: 10px 14px; border: 0.5px solid #ccc; border-radius: 8px; font-size: 15px; width: 280px; background: #fff; color: #1a1a1a; }
     #nickname-input:focus { outline: none; border-color: #888; }
+    #nickname-input.error { border-color: #E24B4A; }
+    .error-msg { font-size: 12px; color: #E24B4A; min-height: 16px; }
 
     #start-screen { gap: 12px; }
     #start-screen p { font-size: 14px; color: #888; }
@@ -69,7 +71,8 @@
 
   <div id="nickname-screen" class="screen active">
     <p>Voer je nickname in om te beginnen</p>
-    <input id="nickname-input" type="text" maxlength="20" placeholder="Jouw nickname" />
+    <input id="nickname-input" type="text" maxlength="20" placeholder="Alleen letters en cijfers" />
+    <div class="error-msg" id="nickname-error"></div>
     <button class="primary" onclick="submitNickname()">Doorgaan</button>
   </div>
 
@@ -115,6 +118,7 @@
 
   <script>
     const API_BASE = '/api/scores';
+    const NICKNAME_REGEX = /^[a-zA-Z0-9]+$/;
 
     const allEmojis = [
       '🍕','🎸','🌵','🐬','🦋','🎯','🍄','🚀',
@@ -137,8 +141,27 @@
     }
 
     function submitNickname() {
-      const val = document.getElementById('nickname-input').value.trim();
-      if (!val) { document.getElementById('nickname-input').focus(); return; }
+      const input = document.getElementById('nickname-input');
+      const errorEl = document.getElementById('nickname-error');
+      const val = input.value.trim();
+
+      input.classList.remove('error');
+      errorEl.textContent = '';
+
+      if (!val) {
+        input.classList.add('error');
+        errorEl.textContent = 'Voer een nickname in';
+        input.focus();
+        return;
+      }
+
+      if (!NICKNAME_REGEX.test(val)) {
+        input.classList.add('error');
+        errorEl.textContent = 'Alleen letters en cijfers toegestaan';
+        input.focus();
+        return;
+      }
+
       nickname = val;
       document.getElementById('display-name').textContent = nickname;
       showScreen('start-screen');
@@ -146,6 +169,15 @@
 
     document.getElementById('nickname-input').addEventListener('keydown', e => {
       if (e.key === 'Enter') submitNickname();
+    });
+
+    document.getElementById('nickname-input').addEventListener('input', e => {
+      const input = e.target;
+      const errorEl = document.getElementById('nickname-error');
+      if (NICKNAME_REGEX.test(input.value) || input.value === '') {
+        input.classList.remove('error');
+        errorEl.textContent = '';
+      }
     });
 
     function startGame(cards) {
@@ -257,6 +289,12 @@
           return `<span class="rank">${i + 1}</span>`;
         };
 
+        const escapeHtml = (str) => str
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+
         content.innerHTML = `
           <table class="lb-table">
             <thead><tr><th>#</th><th>Nickname</th><th>Tijd</th></tr></thead>
@@ -264,7 +302,7 @@
               ${scores.map((s, i) => `
                 <tr>
                   <td>${rankLabel(i)}</td>
-                  <td>${s.nickname}</td>
+                  <td>${escapeHtml(s.nickname)}</td>
                   <td>${s.time_seconds}s</td>
                 </tr>
               `).join('')}
