@@ -3,24 +3,24 @@ const ALLOWED_ORIGINS = [
   'https://puzzle-delta-three.vercel.app',
 ];
 
-function setCors(req, res) {
+export default async function handler(req, res) {
   const origin = req.headers.origin;
-  if (ALLOWED_ORIGINS.includes(origin)) {
+  const originAllowed = ALLOWED_ORIGINS.includes(origin);
+
+  if (originAllowed) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Vary', 'Origin');
-}
 
-export default async function handler(req, res) {
-  setCors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  const origin = req.headers.origin;
-  if (origin && !ALLOWED_ORIGINS.includes(origin)) {
+  if (origin && !originAllowed) {
     return res.status(403).json({ error: 'Niet toegestaan' });
   }
+
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   const { level } = req.query;
   if (!level) return res.status(400).json({ error: 'Level is verplicht' });
