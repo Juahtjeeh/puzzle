@@ -254,11 +254,18 @@
 
     async function saveScore(level, time_seconds) {
       try {
-        await fetch(`${API_BASE}/post`, {
+        const res = await fetch(`${API_BASE}/post`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ nickname, level, time_seconds })
         });
+        const winMsg = document.getElementById('win-msg');
+        if (res.status === 429) {
+          winMsg.textContent = 'Je mag 10 highscores per niveau per uur plaatsen, probeer het later opnieuw of kies een ander niveau.';
+          winMsg.style.color = '#E24B4A';
+        } else {
+          winMsg.style.color = '#1D9E75';
+        }
       } catch(e) {
         console.error('Score opslaan mislukt:', e);
       }
